@@ -55,11 +55,13 @@ export const LoginPage: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       {/* 3. Header Supérieur Institutionnel */}
       <header className="pt-8 px-6 sm:px-12 flex items-center justify-between z-10">
         <div className="flex items-center gap-3.5">
-          {/* Logo avec liseré subtil aux couleurs du drapeau */}
-          <div className="w-11 h-11 p-0.5 rounded-2xl bg-gradient-to-tr from-[#009543] via-[#FBDE4A] to-[#DC241F] shadow-lg shadow-black/40">
-            <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-[#FBDE4A]" />
-            </div>
+          {/* Logo officiel avec liseré subtil aux couleurs du drapeau */}
+          <div className="w-12 h-12 p-0.5 rounded-2xl bg-gradient-to-tr from-[#009543] via-[#FBDE4A] to-[#DC241F] shadow-lg shadow-black/40 overflow-hidden shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="COUSP République du Congo" 
+              className="w-full h-full object-cover rounded-[14px] bg-slate-900" 
+            />
           </div>
           <div>
             <div className="text-white font-extrabold text-sm sm:text-base tracking-tight flex items-center gap-2">

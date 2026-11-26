@@ -78,12 +78,14 @@ export const App: React.FC = () => {
         {/* Barre Latérale Navigation Institutionnelle */}
         <aside className="w-60 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 h-full">
           <div className="flex flex-col min-h-0 flex-1">
-            {/* Logo COUSP */}
-            <div className="p-3.5 border-b border-slate-800/90 flex items-center gap-2.5 shrink-0">
-              <div className="w-8 h-8 p-0.5 rounded-lg bg-gradient-to-tr from-[#009543] via-[#FBDE4A] to-[#DC241F] shadow-md shadow-black/40 shrink-0">
-                <div className="w-full h-full bg-slate-900 rounded-[6px] flex items-center justify-center">
-                  <ShieldAlert className="w-4 h-4 text-[#FBDE4A]" />
-                </div>
+            {/* Logo COUSP officiel */}
+            <div className="p-3 border-b border-slate-800/90 flex items-center gap-2.5 shrink-0">
+              <div className="w-8 h-8 p-0.5 rounded-lg bg-gradient-to-tr from-[#009543] via-[#FBDE4A] to-[#DC241F] shadow-md shadow-black/40 shrink-0 overflow-hidden">
+                <img 
+                  src="/logo.png" 
+                  alt="COUSP Congo Logo" 
+                  className="w-full h-full object-cover rounded-[6px] bg-slate-900" 
+                />
               </div>
               <div className="overflow-hidden">
                 <div className="font-extrabold text-white text-xs tracking-tight flex items-center gap-1.5">
