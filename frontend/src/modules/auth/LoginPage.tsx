@@ -14,8 +14,8 @@ interface LoginProps {
 }
 
 export const LoginPage: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('admin.cousp@sante.gouv.cg');
-  const [password, setPassword] = useState('CouspCongo2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,6 +177,7 @@ export const LoginPage: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#009543] focus:border-transparent transition-all"
+                      placeholder="••••••••••••"
                     />
                   </div>
                 </div>
