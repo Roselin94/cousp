@@ -440,6 +440,86 @@ app.get('/api/v1/audit', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Fonction d'auto-seed au démarrage pour garantir la présence des 12 départements et de l'administrateur
+async function seedInitialData() {
+  try {
+    const adminEmail = 'admin.cousp@sante.gouv.cg';
+    const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+    if (!existingAdmin) {
+      console.log('[COUSP-MIS] Initialisation des données nationales (Auto-Seed)...');
+      
+      // 1. Rôle Administrateur
+      const adminRole = await prisma.role.upsert({
+        where: { slug: 'COORDINATEUR_NATIONAL' },
+        update: {},
+        create: { slug: 'COORDINATEUR_NATIONAL', name: 'Coordinateur National IMS', description: 'Accès souverain global' },
+      });
+
+      // 2. Utilisateur Administrateur
+      const passwordHash = await argon2.hash('CouspCongo2026!');
+      await prisma.user.create({
+        data: {
+          email: adminEmail,
+          passwordHash,
+          firstName: 'Administrateur',
+          lastName: 'National',
+          title: 'Coordinateur Général COUSP',
+          organization: 'Ministère de la Santé et de la Population',
+          phone: '+242 06 500 00 00',
+          status: 'ACTIVE',
+          userRoles: { create: { roleId: adminRole.id } },
+          scopes: { create: { isNational: true } },
+        },
+      });
+
+      // 3. Les 12 Départements Congolais
+      const departments = [
+        { code: 'BZV', name: 'Brazzaville', capitalCity: 'Brazzaville', population: 2145000, hasCriticalAlert: true, activeIncidentsCount: 1 },
+        { code: 'PNR', name: 'Pointe-Noire', capitalCity: 'Pointe-Noire', population: 1150000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'KOU', name: 'Kouilou', capitalCity: 'Hinda', population: 98000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'NIA', name: 'Niari', capitalCity: 'Dolisie', population: 260000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'BOU', name: 'Bouenza', capitalCity: 'Madingou', population: 340000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'LEK', name: 'Lékoumou', capitalCity: 'Sibiti', population: 105000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'POL', name: 'Pool', capitalCity: 'Kinkala', population: 275000, hasCriticalAlert: true, activeIncidentsCount: 1 },
+        { code: 'PLA', name: 'Plateaux', capitalCity: 'Djambala', population: 210000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'CUV', name: 'Cuvette', capitalCity: 'Owando', population: 175000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'CUW', name: 'Cuvette-Ouest', capitalCity: 'Ewo', population: 85000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+        { code: 'SAN', name: 'Sangha', capitalCity: 'Ouesso', population: 110000, hasCriticalAlert: true, activeIncidentsCount: 1 },
+        { code: 'LIK', name: 'Likouala', capitalCity: 'Impfondo', population: 160000, hasCriticalAlert: false, activeIncidentsCount: 0 },
+      ];
+
+      for (const dept of departments) {
+        await prisma.department.upsert({
+          where: { code: dept.code },
+          update: dept,
+          create: dept,
+        });
+      }
+
+      // 4. Pathologies SIMR
+      const diseases = [
+        { code: 'MPOX', name: 'Mpox (Variole du Singe)', epidemicPotential: 'TRES_ELEVE' },
+        { code: 'CHOL', name: 'Choléra', epidemicPotential: 'TRES_ELEVE' },
+        { code: 'EBO', name: 'Ebola / Fièvre Marburg', epidemicPotential: 'CRITIQUE' },
+        { code: 'POLIO', name: 'Poliomyélite', epidemicPotential: 'ELEVE' },
+      ];
+
+      for (const dis of diseases) {
+        await prisma.disease.upsert({
+          where: { code: dis.code },
+          update: dis,
+          create: dis,
+        });
+      }
+
+      console.log('[COUSP-MIS] Auto-seed terminé avec succès.');
+    }
+  } catch (err) {
+    console.error('[COUSP-MIS] Erreur lors de l auto-seed:', err);
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`[COUSP-MIS] Backend API démarré sur http://localhost:${PORT}`);
+  await seedInitialData();
 });
