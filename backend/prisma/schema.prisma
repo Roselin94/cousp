@@ -1,0 +1,273 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Division Administrative & Sanitaire Congolaise
+model Department {
+  id                  String       @id @default(uuid())
+  code                String       @unique
+  name                String
+  capitalCity         String?
+  population          Int          @default(0)
+  hasCriticalAlert    Boolean      @default(false)
+  activeIncidentsCount Int         @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  healthZones         HealthZone[]
+  incidents           Incident[]
+  userScopes          UserScope[]
+}
+
+model HealthZone {
+  id           String       @id @default(uuid())
+  code         String       @unique
+  name         String
+  headquarter  String?
+  population   Int          @default(0)
+  departmentId String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  healthAreas  HealthArea[]
+}
+
+model HealthArea {
+  id           String           @id @default(uuid())
+  code         String           @unique
+  name         String
+  healthZoneId String
+  createdAt    DateTime         @default(now())
+
+  healthZone   HealthZone       @relation(fields: [healthZoneId], references: [id], onDelete: Cascade)
+  facilities   HealthFacility[]
+}
+
+model HealthFacility {
+  id           String       @id @default(uuid())
+  code         String       @unique
+  name         String
+  type         String       @default("CENTRE_SANTE_INTEGRE")
+  level        Int          @default(1)
+  healthAreaId String?
+  contactPhone String?
+  capacityBeds Int          @default(0)
+  isolationBeds Int         @default(0)
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  healthArea   HealthArea?  @relation(fields: [healthAreaId], references: [id])
+  alerts       Alert[]
+  caseRecords  CaseRecord[]
+  stockItems   StockItem[]
+}
+
+// 2. Utilisateurs & Habilitations IAM
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  title        String?
+  organization String?     @default("Ministère de la Santé et de la Population")
+  phone        String?
+  status       String      @default("ACTIVE")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  userRoles    UserRole[]
+  scopes       UserScope[]
+  incidents    Incident[]  @relation("IncidentCommander")
+  auditLogs    AuditLog[]
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  name        String
+  description String?
+  userRoles   UserRole[]
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model UserScope {
+  id           String      @id @default(uuid())
+  userId       String
+  isNational   Boolean     @default(false)
+  departmentId String?
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department? @relation(fields: [departmentId], references: [id])
+}
+
+// 3. Pathologies & Alertes Sanitaires
+model Disease {
+  id                String       @id @default(uuid())
+  code              String       @unique
+  name              String
+  epidemicPotential String       @default("ELEVE")
+  createdAt         DateTime     @default(now())
+
+  alerts            Alert[]
+  caseRecords       CaseRecord[]
+}
+
+model Alert {
+  id               String          @id @default(uuid())
+  alertNumber      String          @unique
+  diseaseId        String
+  healthFacilityId String?
+  reporterName     String
+  reporterType     String          @default("AGENT_SANTE")
+  reporterContact  String?
+  severity         String          @default("MODEREE")
+  status           String          @default("EN_COURS")
+  suspectedCases   Int             @default(1)
+  suspectedDeaths  Int             @default(0)
+  description      String
+  rejectionReason  String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  disease          Disease         @relation(fields: [diseaseId], references: [id])
+  healthFacility   HealthFacility? @relation(fields: [healthFacilityId], references: [id])
+}
+
+// 4. Incidents & Opérations IMS
+model Incident {
+  id                  String       @id @default(uuid())
+  incidentNumber      String       @unique
+  title               String
+  activationLevel     String       @default("NIVEAU_1_VIGILANCE")
+  status              String       @default("ACTIF")
+  incidentCommanderId String?
+  primaryDepartmentId String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  incidentCommander   User?        @relation("IncidentCommander", fields: [incidentCommanderId], references: [id])
+  primaryDepartment   Department?  @relation(fields: [primaryDepartmentId], references: [id])
+  caseRecords         CaseRecord[]
+  sitreps             Sitrep[]
+}
+
+// 5. Cas Épidémiologiques & Laboratoire
+model CaseRecord {
+  id                  String          @id @default(uuid())
+  caseIdentifier      String          @unique
+  patientPseudonym    String
+  gender              String
+  ageYears            Int
+  residenceDepartment String?
+  residenceDistrict   String?
+  classification      String          @default("SUSPECT")
+  outcome             String          @default("EN_TRAITEMENT")
+  admissionDate       DateTime        @default(now())
+  diseaseId           String
+  healthFacilityId    String?
+  incidentId          String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  disease             Disease         @relation(fields: [diseaseId], references: [id])
+  healthFacility      HealthFacility? @relation(fields: [healthFacilityId], references: [id])
+  incident            Incident?       @relation(fields: [incidentId], references: [id])
+  labRequests         LabRequest[]
+}
+
+model LabRequest {
+  id             String          @id @default(uuid())
+  requestNumber  String          @unique
+  sampleType     String
+  caseRecordId   String
+  createdAt      DateTime        @default(now())
+
+  caseRecord     CaseRecord      @relation(fields: [caseRecordId], references: [id], onDelete: Cascade)
+  labResult      LabResult?
+}
+
+model LabResult {
+  id             String          @id @default(uuid())
+  labRequestId   String          @unique
+  resultStatus   String
+  ctValue        Float?
+  testMethod     String          @default("RT-PCR")
+  analyzedBy     String
+  validatedBy    String
+  validationDate DateTime        @default(now())
+
+  labRequest     LabRequest      @relation(fields: [labRequestId], references: [id], onDelete: Cascade)
+}
+
+// 6. Logistique & Stocks
+model Product {
+  id            String      @id @default(uuid())
+  code          String      @unique
+  name          String
+  category      String
+  unitOfMeasure String      @default("Unités")
+  stockItems    StockItem[]
+}
+
+model StockItem {
+  id               String         @id @default(uuid())
+  productId        String
+  healthFacilityId String
+  quantityAvailable Int           @default(0)
+  quantityReserved  Int           @default(0)
+  batchNumber      String
+  expiryDate       DateTime
+  updatedAt        DateTime       @updatedAt
+
+  product          Product        @relation(fields: [productId], references: [id])
+  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id])
+}
+
+// 7. SITREP & Rapports
+model Sitrep {
+  id                   String    @id @default(uuid())
+  sitrepNumber         String    @unique
+  incidentId           String
+  totalCases           Int       @default(0)
+  totalDeaths          Int       @default(0)
+  totalHospitalized    Int       @default(0)
+  reportingPeriodStart DateTime
+  reportingPeriodEnd   DateTime
+  status               String    @default("BROUILLON")
+  responseSummary      String
+  recommendations      String?
+  createdAt            DateTime  @default(now())
+
+  incident             Incident  @relation(fields: [incidentId], references: [id])
+}
+
+// 8. Journal d'Audit
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  resource  String
+  ipAddress String?
+  userId    String?
+  timestamp DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+}
