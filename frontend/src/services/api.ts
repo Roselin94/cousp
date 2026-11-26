@@ -220,7 +220,7 @@ if (isMockEnabled) {
             { isNational: !!payload.isNational, department: deptObj || null }
           ],
         };
-        mockData.users.unshift(newUser);
+        (mockData.users as any[]).unshift(newUser);
         mockResponseData = { code: 201, data: newUser };
       } else if (method === 'delete') {
         const idToDelete = url.split('/').pop();
