@@ -1,7 +1,7 @@
 services:
   - type: web
     name: cousp-mis-backend
-    env: node
+    runtime: node
     plan: free
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npm run build
