@@ -1,0 +1,17 @@
+[build]
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+
+# Redirection des appels API vers le serveur backend Render
+[[redirects]]
+  from = "/api/*"
+  to = "https://cousp.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Redirection SPA (Single Page Application) pour React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
