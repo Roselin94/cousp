@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://cousp-mis-backend.onrender.com/api/$1"
+      "destination": "https://cousp.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

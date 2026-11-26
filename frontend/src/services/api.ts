@@ -1,11 +1,17 @@
 import axios from 'axios';
 import { mockData } from './mockData';
 
-// Détection : mode mock activable via variable d'environnement ou fallback dev
-const isMockEnabled = ((import.meta as any).env?.VITE_USE_MOCK !== 'false');
+// En production (ou si VITE_USE_MOCK=false), le mock est désactivé et l'application interroge le backend réel
+const isProduction = (import.meta as any).env?.PROD;
+const isMockEnabled = !isProduction && ((import.meta as any).env?.VITE_USE_MOCK !== 'false');
+
+// Détection de l'URL de base : soit relative (/api/v1) soit directe vers Render
+const baseURL = (import.meta as any).env?.VITE_API_URL 
+  ? `${(import.meta as any).env.VITE_API_URL}/api/v1` 
+  : '/api/v1';
 
 export const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
